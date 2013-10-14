@@ -136,7 +136,7 @@ void playSystemSound(SystemSoundID inSystemSoundID,bool canPlay)
     SystemSoundID ID;
     NSBundle *bundle = [NSBundle mainBundle];
     NSURL *url = [bundle URLForResource:kSrcName(filename) withExtension:nil];
-    AudioServicesCreateSystemSoundID(( CFURLRef)(url), &ID);
+    AudioServicesCreateSystemSoundID((__bridge  CFURLRef)(url), &ID);
     return ID;
 }
 
