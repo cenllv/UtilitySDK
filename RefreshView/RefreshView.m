@@ -394,9 +394,10 @@ void playSystemSound(SystemSoundID inSystemSoundID,bool canPlay)
                 [_delegate refreshViewBeginRefreshing:self];
             }
             
+            __weak typeof(self) wself = self;
             // 回调
             if (_beginRefreshingBlock) {
-                _beginRefreshingBlock(self);
+                _beginRefreshingBlock(wself);
             }
         }
             break;	
