@@ -304,7 +304,6 @@
 - (void)calculateCurrentPageIndex:(UIScrollView *)scrollView
 {
     NSInteger pageIndex;
-    
     switch (_orientation) {
         case PageViewOrientationHorizontal:
             pageIndex = floor(_scrollView.contentOffset.x / _pageSize.width);
@@ -315,13 +314,13 @@
         default:
             break;
     }
-    
     _currentPageIndex = pageIndex;
 }
+
 - (void)scrollToSelectedPage:(NSInteger)pageIndex
 {
     if (pageIndex < _pages.count){
-        [self calculateCurrentPageIndex:_scrollView];
+        
         if (_shouldWrap) {
             switch (_orientation) {
                 case PageViewOrientationHorizontal:
@@ -484,7 +483,6 @@
             }
             
         }
-        NSLog(@"pagescount %d",_pages.count);
         // 重置_scrollView的contentSize
         switch (_orientation) {
             case PageViewOrientationHorizontal://横向
@@ -546,7 +544,6 @@
     if (pageIndex < _dataSourcePageCount){
         
         [self calculateCurrentPageIndex:_scrollView];
-        //        NSLog(@"========= %d",_currentPageIndex);
         
         if (_shouldWrap) {
             switch (_orientation) {
@@ -556,34 +553,26 @@
                     if (count * _pageSize.width < ((self.frame.size.width - _pageSize.width) / 2)) {
                         count = count + 1;
                     }
-                    NSInteger leftLimitIndex = _appendingPageCount/2 + count - 1;
-                    NSInteger rightLimitIndex = _pages.count - 1 - _appendingPageCount/2 - count;
-                    //                    NSLog(@"left %d,right %d",leftLimitIndex,rightLimitIndex);
                     NSInteger index  = pageIndex + _appendingPageCount/2;
-                    if (rightLimitIndex > leftLimitIndex){
-                        if ((_currentPageIndex <= leftLimitIndex) &&
-                            (pageIndex >= _pages.count - _appendingPageCount - 1 - count)) {
-                            
-                            _shouldResetOffset = NO;
-                            [_scrollView setContentOffset:CGPointMake(_scrollView.contentOffset.x + (_pages.count - _appendingPageCount) * _pageSize.width, 0) animated:NO];
-                            _shouldResetOffset = YES;
-                        }
+                    
+                    if ((_scrollView.contentOffset.x - _scrollView.frame.origin.x < _appendingPageCount/2 * _pageSize.width) &&
+                        (pageIndex  >= MAX(_pages.count - _appendingPageCount - 1 - count, 2))) {
+                        _shouldResetOffset = NO;
+                        [_scrollView setContentOffset:CGPointMake(_scrollView.contentOffset.x + (_pages.count - _appendingPageCount) * _pageSize.width, 0) animated:NO];
+                        _shouldResetOffset = YES;
                         
-                        if ((_currentPageIndex >= rightLimitIndex) &&
-                            pageIndex <= count - 1) {
-                            _shouldResetOffset = NO;
-                            [_scrollView setContentOffset:CGPointMake(_scrollView.contentOffset.x - (_pages.count - _appendingPageCount) * _pageSize.width, 0) animated:NO];
-                            _shouldResetOffset = YES;
-                        }
+                    }
+                    if((_scrollView.contentSize.width - _scrollView.contentOffset.x - (self.frame.size.width - _scrollView.frame.origin.x)) < _appendingPageCount/2 * _pageSize.width &&
+                       (pageIndex <= count - 1)){
+                        _shouldResetOffset = NO;
+                        [_scrollView setContentOffset:CGPointMake(_scrollView.contentOffset.x - (_pages.count - _appendingPageCount) * _pageSize.width, 0) animated:NO];
+                        _shouldResetOffset = YES;
+                        
                     }
                     
                     [_scrollView setContentOffset:CGPointMake(_pageSize.width * index, 0) animated:YES];
-                    NSLog(@"=========1111 %d ",_currentPageIndex);
                     [self setPagesAtContentOffset:_scrollView.contentOffset];
-                    NSLog(@"=========2222 %d ",_currentPageIndex);
                     [self refreshVisiblePagesAppearance];
-                    NSLog(@"=========333 %d end............",_currentPageIndex);
-                    
                     
                 }
                     break;
@@ -593,29 +582,25 @@
                     if (count * _pageSize.height < ((self.frame.size.height - _pageSize.height) / 2)) {
                         count = count + 1;
                     }
-                    NSInteger topLimitIndex = _appendingPageCount/2 + count - 1;
-                    NSInteger downLimitIndex = _pages.count - 1 - _appendingPageCount/2 - count;
                     NSInteger index  = pageIndex + _appendingPageCount/2;
-                    if ((_currentPageIndex <= topLimitIndex) &&
-                        (pageIndex >= _pages.count - _appendingPageCount - 1 - count)) {
+                    
+                    if ((_scrollView.contentOffset.y - _scrollView.frame.origin.y < _appendingPageCount/2 * _pageSize.width) &&
+                        (pageIndex  >= MAX(_pages.count - _appendingPageCount - 1 - count, 2))) {
                         
                         _shouldResetOffset = NO;
                         [_scrollView setContentOffset:CGPointMake(0, _scrollView.contentOffset.y + (_pages.count - _appendingPageCount) * _pageSize.height) animated:NO];
                         _shouldResetOffset = YES;
                     }
-                    if ((_currentPageIndex >= downLimitIndex) &&
-                        pageIndex <= count - 1) {
+                    if ((_scrollView.contentSize.height - _scrollView.contentOffset.y - (self.frame.size.height - _scrollView.frame.origin.y)) < _appendingPageCount/2 * _pageSize.height &&
+                        (pageIndex <= count - 1)) {
                         _shouldResetOffset = NO;
                         [_scrollView setContentOffset:CGPointMake(0, _scrollView.contentOffset.y - (_pages.count - _appendingPageCount) * _pageSize.height) animated:NO];
                         _shouldResetOffset = YES;
                     }
                     
                     [_scrollView setContentOffset:CGPointMake(0, _pageSize.height * index) animated:YES];
-                    NSLog(@"=========444 %d ",_currentPageIndex);
                     [self setPagesAtContentOffset:_scrollView.contentOffset];
-                    NSLog(@"=========555 %d ",_currentPageIndex);
                     [self refreshVisiblePagesAppearance];
-                    NSLog(@"=========666 %d ",_currentPageIndex);
                 }
                 default:
                     break;
@@ -661,9 +646,9 @@
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{
     
+    [self calculateCurrentPageIndex:scrollView];
+    
     if (_shouldWrap && _shouldResetOffset) {
-        //        [self calculateCurrentPageIndex:scrollView];
-        NSLog(@"=---------======== %f",scrollView.contentOffset.x);
         switch (_orientation) {
             case PageViewOrientationHorizontal:
             {
@@ -700,10 +685,14 @@
     [self refreshVisiblePagesAppearance];
 }
 
-
+- (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView
+{
+    [self calculateCurrentPageIndex:scrollView];
+}
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
     
     [self calculateCurrentPageIndex:scrollView];
+    
     NSInteger index ;
     if (_shouldWrap) {
         if (_currentPageIndex < _appendingPageCount/2) {
@@ -731,7 +720,6 @@
     }
     if (_delegate && [_delegate respondsToSelector:@selector(pageView:shouldScrollToSelectedPage:)]) {
         if ([_delegate pageView:self shouldScrollToSelectedPage:sender.tapId]) {
-            NSLog(@"id %d",sender.gestureId);
             [self scrollToSelectedPage:_shouldWrap ? sender.gestureId :sender.tapId];
         }
     }
